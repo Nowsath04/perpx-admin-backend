@@ -1,6 +1,6 @@
 const express= require("express");
 const { NewBlog, GetSingleBlog, DeleteSingleBlog, UpdateSingleBlog, getAllBlog, GetSingleBlogUrl } = require("../controllers/blogControllers");
-const jwtVerification = require("../middleware/jwtVerfication");
+const jwtVerification = require("../middleware/JwtVerfication");
 const upload = require("../utils/fileUpload");
 
 
