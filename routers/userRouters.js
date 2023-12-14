@@ -1,6 +1,6 @@
 const express=require("express")
 const { register, LoginUser, Myprofile, Userlogout, UpdateUser } = require("../controllers/userControllers")
-const jwtVerification = require("../middleware/jwtVerfication")
+const jwtVerification = require("../middleware/JwtVerfication")
 
 
 const router=express.Router()
