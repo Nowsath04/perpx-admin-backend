@@ -9,6 +9,7 @@ const cookieparser=require("cookie-parser")
 const blogRouter=require("./routers/blogRouters")
 const app=express()
 const multer=require("multer")
+const pageRouter = require("./routers/pageRouter")
 //  middleware
 app.use(cookieparser())
 app.use(express.urlencoded({ extended: true }));
@@ -21,6 +22,7 @@ app.use(express.json())
 app.use("/api",sendData)
 app.use("/api/auth",authRouter)
 app.use("/api/blog",blogRouter)
+app.use("/api/page",pageRouter)
 // db connection
 
 ConnectDb()

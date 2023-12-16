@@ -36,6 +36,9 @@ const blogSchema = new mongoose.Schema({
     imageurl:{
         type:String
     },
+    ogImage:{
+        type:String
+    }
  
    
 },{
