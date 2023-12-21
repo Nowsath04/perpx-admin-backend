@@ -6,6 +6,7 @@ const AWS = require("aws-sdk")
 const dotenv = require("dotenv").config()
 const fs = require("fs")
 const ErrorHandler = require("../utils/ErrorHandler")
+const categorys = require("../models/category")
 
 
 const bucketName = process.env.aws_bucket;
@@ -41,18 +42,11 @@ const uploadImageToS3 = async (file) => {
 exports.NewBlog = asyncHandler(async (req, res, next) => {
     const { mainheading, maincontent, content, category, meta_description, meta_keywords, meta_title, url } = req.body;
 
-    if (!req.files || req.files.length < 2) {
-        return next(new ErrorHandler("Select the required images", 401));
-    }
-
-    const blogImage = req.files[0];
-    const ogImage = req.files[1];
+    const blogImage = req.file;
 
     // Upload the images to S3
     const imageUrl = await uploadImageToS3(blogImage);
-    const ogImageUrl = await uploadImageToS3(ogImage);
 
-    // Check if the URL already exists
     const isUrlExist = await Blogs.exists({ url });
     if (isUrlExist) {
         return next(new ErrorHandler("This URL already exists", 401));
@@ -61,7 +55,6 @@ exports.NewBlog = asyncHandler(async (req, res, next) => {
     // Create a new blog entry with both images
     const blog = await Blogs.create({
         imageurl: imageUrl,
-        ogImage: ogImageUrl,
         mainheading,
         maincontent,
         content,
@@ -121,26 +114,20 @@ exports.DeleteSingleBlog = asyncHandler(async (req, res, next) => {
 })
 
 
+
 // update single blog
 
 exports.UpdateSingleBlog = asyncHandler(async (req, res, next) => {
     const { mainheading, maincontent, content, category, meta_description, meta_keywords, meta_title, url } = req.body;
 
     try {
-        if (!req.files || req.files.length < 2) {
-            return next(new ErrorHandler("Select the required images", 401));
+
+        if (req.file) {
+         imageUrl = await uploadImageToS3(req.file);
         }
-    
-        const blogImage = req.files[0];
-        const ogImage = req.files[1];
-    
-        // Upload the images to S3
-        const imageUrl = await uploadImageToS3(blogImage);
-        const ogImageUrl = await uploadImageToS3(ogImage);
-    
+
         const updateData = {
             imageurl: imageUrl,
-            ogImage: ogImageUrl,
             mainheading,
             maincontent,
             content,
@@ -150,13 +137,13 @@ exports.UpdateSingleBlog = asyncHandler(async (req, res, next) => {
             meta_title,
             url
         };
-    
+
         const updatedBlog = await Blogs.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    
+
         if (!updatedBlog) {
             return next(new ErrorHandler("Blog not found", 404));
         }
-    
+
         res.status(200).json({
             success: true,
             updatedBlog,
@@ -165,8 +152,10 @@ exports.UpdateSingleBlog = asyncHandler(async (req, res, next) => {
         console.error("Update Error:", error);
         next(error);
     }
-    
 });
+
+
+
 
 
 
@@ -185,3 +174,53 @@ exports.getAllBlog = asyncHandler(async (req, res, next) => {
 })
 
 
+exports.allCategory = asyncHandler(async (req, res) =>{
+
+const data = await categorys.find({})
+
+const value = data.filter(item => item.categories).map(item => item.categories);
+res.status(200).json({
+    success: true,
+    value
+})
+
+})
+
+
+exports.createCategory = asyncHandler(async (req, res) =>{
+
+const {category} = req.body
+
+const categorydata = await categorys.findOne({categories:category})
+
+if(!categorydata){
+    
+    const data = await categorys.create({categories:category})
+    res.status(200).json({ message:"Category created successfully"})
+
+
+}else{
+    res.status(200).json({ message:"Already Category created"})
+}
+
+})
+
+
+exports.updateCategory = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { category } = req.body;
+  
+    try {
+      const updatedCategory = await categorys.findByIdAndUpdate(
+        id,
+        { categories: category },);
+  
+      if (updatedCategory) {
+        res.status(200).json({ message: "Category updated successfully" });
+      } else {
+        res.status(404).json({ message: "Category not found" });
+      }
+    } catch (error) {
+     console.log(error);
+    }
+  });
