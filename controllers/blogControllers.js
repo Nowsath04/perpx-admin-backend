@@ -115,19 +115,28 @@ exports.DeleteSingleBlog = asyncHandler(async (req, res, next) => {
 
 
 
+
 // update single blog
 
 exports.UpdateSingleBlog = asyncHandler(async (req, res, next) => {
     const { mainheading, maincontent, content, category, meta_description, meta_keywords, meta_title, url } = req.body;
 
     try {
+        let imageUrl;
 
         if (req.file) {
-         imageUrl = await uploadImageToS3(req.file);
+            imageUrl = await uploadImageToS3(req.file);
         }
 
+        const existingBlog = await Blogs.findById(req.params.id);
+
+        if (!existingBlog) {
+            return next(new ErrorHandler("Blog not found", 404));
+        }
+
+        // Only update the image URL if a new image is provided
         const updateData = {
-            imageurl: imageUrl,
+            imageurl: imageUrl || existingBlog.imageurl, // Use existing image if no new image is provided
             mainheading,
             maincontent,
             content,
@@ -140,10 +149,6 @@ exports.UpdateSingleBlog = asyncHandler(async (req, res, next) => {
 
         const updatedBlog = await Blogs.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
-        if (!updatedBlog) {
-            return next(new ErrorHandler("Blog not found", 404));
-        }
-
         res.status(200).json({
             success: true,
             updatedBlog,
@@ -153,6 +158,7 @@ exports.UpdateSingleBlog = asyncHandler(async (req, res, next) => {
         next(error);
     }
 });
+
 
 
 
